@@ -92,6 +92,7 @@ Supported:
 Emulated Vim plugins:
 
 * vim-surround
+* argtextobj.vim
 
 Not supported (yet):
 
@@ -138,6 +139,9 @@ Available extensions:
     * Emulates [vim-surround](https://github.com/tpope/vim-surround)
     * Commands: `ys`, `cs`, `ds`, `S`
 
+* argtextobj
+    * Emulates [argtextobj.vim](https://vim.sourceforge.io/scripts/script.php?script_id=2699)
+    * Text objects: `ia`, `aa`
 
 Changes to the IDE
 ------------------
