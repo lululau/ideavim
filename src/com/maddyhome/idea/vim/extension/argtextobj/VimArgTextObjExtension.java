@@ -2,6 +2,7 @@ package com.maddyhome.idea.vim.extension.argtextobj;
 
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
@@ -10,6 +11,7 @@ import com.maddyhome.idea.vim.action.VimCommandAction;
 import com.maddyhome.idea.vim.action.motion.TextObjectAction;
 import com.maddyhome.idea.vim.command.Argument;
 import com.maddyhome.idea.vim.command.Command;
+import com.maddyhome.idea.vim.command.CommandFlags;
 import com.maddyhome.idea.vim.command.MappingMode;
 import com.maddyhome.idea.vim.common.TextRange;
 import com.maddyhome.idea.vim.extension.VimNonDisposableExtension;
@@ -18,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -42,11 +45,13 @@ public class VimArgTextObjExtension extends VimNonDisposableExtension {
         this.isInner = isInner;
       }
 
-      public TextRange getRange(@NotNull Editor editor,
-                                DataContext context,
-                                int count,
-                                int rawCount,
-                                Argument argument) {
+//      public TextRange getRange(@NotNull Editor editor,
+//                                DataContext context,
+//                                int count,
+//                                int rawCount,
+//                                Argument argument) {
+
+    public TextRange getRange(@NotNull Editor editor, @NotNull Caret caret, @NotNull DataContext context, int count, int rawCount, @Nullable Argument argument) {
         final ArgBoundsFinder finder = new ArgBoundsFinder(editor.getDocument());
         int pos = editor.getCaretModel().getOffset();
         final int selStart = editor.getSelectionModel().getSelectionStart();
@@ -102,10 +107,9 @@ public class VimArgTextObjExtension extends VimNonDisposableExtension {
     }
 
     @Override
-    public int getFlags() {
-      return Command.FLAG_MOT_CHARACTERWISE | Command.FLAG_MOT_INCLUSIVE | Command.FLAG_TEXT_BLOCK;
+    public EnumSet<CommandFlags> getFlags() {
+      return EnumSet.of(CommandFlags.FLAG_MOT_CHARACTERWISE, CommandFlags.FLAG_MOT_INCLUSIVE, CommandFlags.FLAG_TEXT_BLOCK);
     }
-
   }
 
   @Override
