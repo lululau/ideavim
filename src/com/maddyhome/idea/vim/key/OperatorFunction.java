@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,5 +27,10 @@ import org.jetbrains.annotations.NotNull;
  * @author vlan
  */
 public interface OperatorFunction {
+  /**
+   * The value of 'operatorfunc' to be used as the operator function in 'g@'.
+   *
+   * Make sure to synchronize your function properly using read/write actions.
+   */
   boolean apply(@NotNull Editor editor, @NotNull DataContext context, @NotNull SelectionType selectionType);
 }

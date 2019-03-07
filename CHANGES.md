@@ -16,25 +16,62 @@ It is important to distinguish EAP from traditional pre-release software.
 Please note that the quality of EAP versions may at times be way below even
 usual beta standards.
 
-
 To Be Released
 --------------
 
-A bugfix release.
+* Fixed `:only` command
+* [VIM-1586](https://youtrack.jetbrains.com/issue/VIM-1586) Support `:shell` command
+* [VIM-801](https://youtrack.jetbrains.com/issue/VIM-801) Support `:tabnext` and `:tabprevious` commands
+* [VIM-1570](https://youtrack.jetbrains.com/issue/VIM-1570) Support `g<C-A>` and `g<C-X>` commands for visual mode
+* [VIM-1119](https://youtrack.jetbrains.com/issue/VIM-1119) Fixed 'e' search offset
+* [VIM-1587](https://youtrack.jetbrains.com/issue/VIM-1587) Fixed end-of-line multi line percent match in visual mode
+* [VIM-1303](https://youtrack.jetbrains.com/issue/VIM-1303) Fixed "Changing color schemes doesn't change find input"
+* [VIM-944](https://youtrack.jetbrains.com/issue/VIM-944) Fixed navigation with keypad arrows
+* [VIM-1569](https://youtrack.jetbrains.com/issue/VIM-1569) Fixed surround plugin bug by `S<tag attr="attr">`
+* [VIM-1012](https://youtrack.jetbrains.com/issue/VIM-1012) Fixed wrong tab selection after`:q`
+* [VIM-1245](https://youtrack.jetbrains.com/issue/VIM-1245) Clear switcher list after`:q`
 
+
+0.51, 2019-02-12
+----------------
+
+* [VIM-1558](https://youtrack.jetbrains.com/issue/VIM-1558) Fixed scrolling for code with block inlays in Rider 2018.3 
+* [VIM-1187](https://youtrack.jetbrains.com/issue/VIM-1187) Improved performance of `set relativelinenumber` on large files
+* [VIM-620](https://youtrack.jetbrains.com/issue/VIM-620) Fixed handling `<C-O>` and `<Esc>` in Insert and Replace modes
+* [VIM-798](https://youtrack.jetbrains.com/issue/VIM-798) Allow arrow keys for window navigation commands
+
+
+0.50, 2018-10-18
+----------------
+
+Moved "Vim Emulation" settings into "File | Settings | Vim Emulation". Support
+for vim-multiple-cursors commands `<A-n>`, `<A-x>`, `<A-p>`, `g<A-n>` (put `set
+multiple-cursors` into your ~/.ideavimrc to enable it). Support for running
+Vim commands for multiple cursors. Various bug fixes.
+
+* [VIM-634](https://youtrack.jetbrains.com/issue/VIM-634) Support for vim-multiple-cursors commands `<A-n>`, `<A-x>`, `<A-p>`, `g<A-n>`
+* [VIM-780](https://youtrack.jetbrains.com/issue/VIM-780) Support for running Vim commands for multiple cursors
+* [VIM-176](https://youtrack.jetbrains.com/issue/VIM-176) Fixed arrow key navigation in Run/Debug tool windows
+* [VIM-339](https://youtrack.jetbrains.com/issue/VIM-339) Fixed `<Esc>` in diff windows
 * [VIM-862](https://youtrack.jetbrains.com/issue/VIM-862) Allow `:action` to work in visual mode
 * [VIM-1110](https://youtrack.jetbrains.com/issue/VIM-1110) Put the caret in correct place after `I` in visual block mode
 * [VIM-1329](https://youtrack.jetbrains.com/issue/VIM-1329) Request focus reliably for Ex entry and output panels
 * [VIM-1368](https://youtrack.jetbrains.com/issue/VIM-1368) Wait for focus reliably before running an `:action`
 * [VIM-1379](https://youtrack.jetbrains.com/issue/VIM-1379) Fixed `I` for short lines in visual block mode
 * [VIM-1380](https://youtrack.jetbrains.com/issue/VIM-1380) Fixed `cw` with count at the end of a word
+* [VIM-1404](https://youtrack.jetbrains.com/issue/VIM-1404) Fixed the ability to use `:e#` when editor tabs are hidden
+* [VIM-1431](https://youtrack.jetbrains.com/issue/VIM-1431) Fixed pasting text into the empty document
+* [VIM-1427](https://youtrack.jetbrains.com/issue/VIM-1427) Added the support for count to the `it` and `at` motions
+* [VIM-1287](https://youtrack.jetbrains.com/issue/VIM-1287) Fixed `i(` actions inside string literals
+* [VIM-1317](https://youtrack.jetbrains.com/issue/VIM-1317) Don't run Undo/Redo inside write actions
+* [VIM-1366](https://youtrack.jetbrains.com/issue/VIM-1366) Don't wrap a secondary event loop for `input()` into a write action
+* [VIM-1274](https://youtrack.jetbrains.com/issue/VIM-1274) Correctly process escaping when `smartcase` is on
 
 
 0.49, 2017-12-12
 ----------------
 
 Enabled zero-latency typing for Vim emulation. Added support for `iskeyword` option. Various bug fixes.
-
 
 * [VIM-1254](https://youtrack.jetbrains.com/issue/VIM-1254) Enable zero-latency typing for Vim emulation
 * [VIM-1367](https://youtrack.jetbrains.com/issue/VIM-1367) Support `iskeyword` option
@@ -49,7 +86,6 @@ Bug fixes:
 
 * [VIM-1205](https://youtrack.jetbrains.com/issue/VIM-1205) Don't move key handling into separate event for raw handlers
 * [VIM-1216](https://youtrack.jetbrains.com/issue/VIM-1216) Fixed `.` resetting the last find movement while repeating change that also uses movement
-
 
 Features:
 

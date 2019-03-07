@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package com.maddyhome.idea.vim.action.change.insert;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil;
 import com.maddyhome.idea.vim.VimPlugin;
 import com.maddyhome.idea.vim.action.VimCommandAction;
 import com.maddyhome.idea.vim.command.Command;
@@ -36,15 +35,16 @@ import java.util.Set;
 public class InsertExitModeAction extends VimCommandAction {
   private static final String ACTION_ID = "VimInsertExitMode";
 
-  public InsertExitModeAction() {
+  protected InsertExitModeAction() {
     super(new EditorActionHandlerBase() {
-      public boolean execute(@NotNull Editor editor, @NotNull DataContext context, @NotNull Command cmd) {
-        VimPlugin.getChange().processEscape(InjectedLanguageUtil.getTopLevelEditor(editor), context);
+      @Override
+      protected boolean execute(@NotNull Editor editor, @NotNull DataContext context, @NotNull Command cmd) {
+        VimPlugin.getChange().processEscape(editor, context);
         return true;
       }
     });
   }
-
+  
   @NotNull
   @Override
   public Set<MappingMode> getMappingModes() {

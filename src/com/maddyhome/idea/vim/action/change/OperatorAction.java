@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import com.maddyhome.idea.vim.key.OperatorFunction;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,8 +50,9 @@ public class OperatorAction extends VimCommandAction {
           if (argument != null) {
             final Command motion = argument.getMotion();
             if (motion != null) {
-              final TextRange range = MotionGroup.getMotionRange(editor, context, cmd.getCount(), cmd.getRawCount(),
-                                                                 argument, true);
+              final TextRange range = MotionGroup
+                .getMotionRange(editor, editor.getCaretModel().getPrimaryCaret(), context, cmd.getCount(),
+                                cmd.getRawCount(), argument, true);
               if (range != null) {
                 VimPlugin.getMark().setChangeMarks(editor, range);
                 final SelectionType selectionType = SelectionType.fromCommandFlags(motion.getFlags());
@@ -82,7 +84,7 @@ public class OperatorAction extends VimCommandAction {
   @NotNull
   @Override
   public Command.Type getType() {
-    return Command.Type.OTHER_READ_WRITE;
+    return Command.Type.OTHER_SELF_SYNCHRONIZED;
   }
 
   @NotNull
@@ -92,7 +94,7 @@ public class OperatorAction extends VimCommandAction {
   }
 
   @Override
-  public int getFlags() {
-    return Command.FLAG_OP_PEND;
+  public EnumSet<CommandFlags> getFlags() {
+    return EnumSet.of(CommandFlags.FLAG_OP_PEND);
   }
 }

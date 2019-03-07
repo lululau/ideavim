@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,15 +106,7 @@ public class Register {
     public int compare(V o1, V o2) {
       Register a = (Register)o1;
       Register b = (Register)o2;
-      if (a.name < b.name) {
-        return -1;
-      }
-      else if (a.name > b.name) {
-        return 1;
-      }
-      else {
-        return 0;
-      }
+      return Character.compare(a.name, b.name);
     }
   }
 }

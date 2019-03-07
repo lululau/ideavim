@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package com.maddyhome.idea.vim.action.motion.object;
 
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
 import com.maddyhome.idea.vim.VimPlugin;
 import com.maddyhome.idea.vim.action.motion.TextObjectAction;
@@ -34,11 +35,15 @@ public class MotionInnerBlockTagAction extends TextObjectAction {
   }
 
   private static class Handler extends TextObjectActionHandler {
+    public Handler() {
+      super(true);
+    }
+
     @Override
     @Nullable
-    public TextRange getRange(@NotNull Editor editor, @Nullable DataContext context, int count, int rawCount,
-                              @Nullable Argument argument) {
-      return VimPlugin.getMotion().getBlockTagRange(editor, false);
+    public TextRange getRange(@NotNull Editor editor, @NotNull Caret caret, @Nullable DataContext context, int count,
+                              int rawCount, @Nullable Argument argument) {
+      return VimPlugin.getMotion().getBlockTagRange(editor, caret, count, false);
     }
   }
 }

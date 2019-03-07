@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,9 +80,7 @@ import java.util.concurrent.TimeUnit;
  */
 @State(
   name = "VimSettings",
-  storages = {@Storage(
-    id = "main",
-    file = "$APP_CONFIG$/vim_settings.xml")})
+  storages = {@Storage(file = "$APP_CONFIG$/vim_settings.xml")})
 public class VimPlugin implements ApplicationComponent, PersistentStateComponent<Element> {
   private static final String IDEAVIM_COMPONENT_NAME = "VimPlugin";
   private static final String IDEAVIM_PLUGIN_ID = "IdeaVIM";

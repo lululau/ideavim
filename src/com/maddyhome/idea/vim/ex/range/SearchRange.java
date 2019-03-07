@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,14 @@ package com.maddyhome.idea.vim.ex.range;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
 import com.maddyhome.idea.vim.VimPlugin;
-import com.maddyhome.idea.vim.command.Command;
+import com.maddyhome.idea.vim.command.CommandFlags;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -58,31 +60,33 @@ public class SearchRange extends AbstractRange {
     StringTokenizer tok = new StringTokenizer(pattern, "\u0000");
     while (tok.hasMoreTokens()) {
       String pat = tok.nextToken();
-      if (pat.equals("\\/")) {
-        patterns.add(VimPlugin.getSearch().getLastSearch());
-        flags.add(Command.FLAG_SEARCH_FWD);
-      }
-      else if (pat.equals("\\?")) {
-        patterns.add(VimPlugin.getSearch().getLastSearch());
-        flags.add(Command.FLAG_SEARCH_REV);
-      }
-      else if (pat.equals("\\&")) {
-        patterns.add(VimPlugin.getSearch().getLastPattern());
-        flags.add(Command.FLAG_SEARCH_FWD);
-      }
-      else {
-        if (pat.charAt(0) == '/') {
-          flags.add(Command.FLAG_SEARCH_FWD);
-        }
-        else {
-          flags.add(Command.FLAG_SEARCH_REV);
-        }
+      switch (pat) {
+        case "\\/":
+          patterns.add(VimPlugin.getSearch().getLastSearch());
+          flags.add(EnumSet.of(CommandFlags.FLAG_SEARCH_FWD));
+          break;
+        case "\\?":
+          patterns.add(VimPlugin.getSearch().getLastSearch());
+          flags.add(EnumSet.of(CommandFlags.FLAG_SEARCH_REV));
+          break;
+        case "\\&":
+          patterns.add(VimPlugin.getSearch().getLastPattern());
+          flags.add(EnumSet.of(CommandFlags.FLAG_SEARCH_FWD));
+          break;
+        default:
+          if (pat.charAt(0) == '/') {
+            flags.add(EnumSet.of(CommandFlags.FLAG_SEARCH_FWD));
+          }
+          else {
+            flags.add(EnumSet.of(CommandFlags.FLAG_SEARCH_REV));
+          }
 
-        pat = pat.substring(1);
-        if (pat.charAt(pat.length() - 1) == pat.charAt(0)) {
-          pat = pat.substring(0, pat.length() - 1);
-        }
-        patterns.add(pat);
+          pat = pat.substring(1);
+          if (pat.charAt(pat.length() - 1) == pat.charAt(0)) {
+            pat = pat.substring(0, pat.length() - 1);
+          }
+          patterns.add(pat);
+          break;
       }
     }
   }
@@ -101,8 +105,8 @@ public class SearchRange extends AbstractRange {
     int pos = -1;
     for (int i = 0; i < patterns.size(); i++) {
       String pattern = patterns.get(i);
-      int flag = flags.get(i);
-      if ((flag & Command.FLAG_SEARCH_FWD) != 0 && !lastZero) {
+      EnumSet<CommandFlags> flag = flags.get(i);
+      if (flag.contains(CommandFlags.FLAG_SEARCH_FWD) && !lastZero) {
         pos = VimPlugin.getMotion().moveCaretToLineEnd(editor, line, true);
       }
       else {
@@ -126,14 +130,42 @@ public class SearchRange extends AbstractRange {
     }
   }
 
+  @Override
+  protected int getRangeLine(@NotNull Editor editor, @NotNull Caret caret, @NotNull DataContext context,
+                             boolean lastZero) {
+    int line = caret.getLogicalPosition().line;
+    int offset = -1;
+    for (int i = 0; i < patterns.size(); i++) {
+      final String pattern = patterns.get(i);
+      final EnumSet<CommandFlags> flag = flags.get(i);
+
+      offset = VimPlugin.getSearch().search(editor, pattern, getSearchOffset(editor, line, flag, lastZero), 1, flag);
+      if (offset == -1) break;
+
+      line = editor.offsetToLogicalPosition(offset).line;
+    }
+
+    return offset != -1 ? line : -1;
+  }
+
+  private int getSearchOffset(@NotNull Editor editor, int line, EnumSet<CommandFlags> flag, boolean lastZero) {
+    if (flag.contains(CommandFlags.FLAG_SEARCH_FWD) && !lastZero) {
+      return VimPlugin.getMotion().moveCaretToLineEnd(editor, line, true);
+    }
+
+    return VimPlugin.getMotion().moveCaretToLineStart(editor, line);
+  }
+
   @NotNull
   public String toString() {
 
     return "SearchRange[" + "patterns=" + patterns + ", " + super.toString() + "]";
   }
 
-  @NotNull private final List<String> patterns = new ArrayList<String>();
-  @NotNull private final List<Integer> flags = new ArrayList<Integer>();
+  @NotNull
+  private final List<String> patterns = new ArrayList<>();
+  @NotNull
+  private final List<EnumSet<CommandFlags>> flags = new ArrayList<>();
 
   private static final Logger logger = Logger.getInstance(SearchRange.class.getName());
 }

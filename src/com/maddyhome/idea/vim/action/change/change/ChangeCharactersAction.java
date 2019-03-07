@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,12 @@
 package com.maddyhome.idea.vim.action.change.change;
 
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorAction;
 import com.maddyhome.idea.vim.VimPlugin;
 import com.maddyhome.idea.vim.command.Argument;
+import com.maddyhome.idea.vim.handler.CaretOrder;
 import com.maddyhome.idea.vim.handler.ChangeEditorActionHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,8 +37,14 @@ public class ChangeCharactersAction extends EditorAction {
   }
 
   private static class Handler extends ChangeEditorActionHandler {
-    public boolean execute(@NotNull Editor editor, @NotNull DataContext context, int count, int rawCount, @Nullable Argument argument) {
-      return VimPlugin.getChange().changeCharacters(editor, context, count);
+    public Handler() {
+      super(true, CaretOrder.DECREASING_OFFSET);
+    }
+
+    @Override
+    public boolean execute(@NotNull Editor editor, @NotNull Caret caret, @NotNull DataContext context, int count,
+                           int rawCount, @Nullable Argument argument) {
+      return VimPlugin.getChange().changeCharacters(editor, caret, count);
     }
   }
 }

@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,27 +24,26 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.command.CommandProcessor;
-import com.intellij.openapi.editor.actionSystem.ActionPlan;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.actionSystem.ActionPlan;
 import com.intellij.openapi.editor.actionSystem.TypedActionHandler;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil;
-import com.maddyhome.idea.vim.command.Argument;
-import com.maddyhome.idea.vim.command.Command;
-import com.maddyhome.idea.vim.command.CommandState;
-import com.maddyhome.idea.vim.command.MappingMode;
+import com.maddyhome.idea.vim.command.*;
 import com.maddyhome.idea.vim.extension.VimExtensionHandler;
 import com.maddyhome.idea.vim.group.RegisterGroup;
-import com.maddyhome.idea.vim.helper.*;
+import com.maddyhome.idea.vim.helper.DigraphSequence;
+import com.maddyhome.idea.vim.helper.EditorDataContext;
+import com.maddyhome.idea.vim.helper.RunnableHelper;
+import com.maddyhome.idea.vim.helper.StringHelper;
 import com.maddyhome.idea.vim.key.*;
 import com.maddyhome.idea.vim.option.Options;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -262,15 +261,15 @@ public class KeyHandler {
     if (mapping.isPrefix(fromKeys)) {
       mappingKeys.add(key);
       if (!application.isUnitTestMode() && Options.getInstance().isSet(Options.TIMEOUT)) {
-        commandState.startMappingTimer(new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent actionEvent) {
-            mappingKeys.clear();
-            for (KeyStroke keyStroke : fromKeys) {
-              handleKey(editor, keyStroke, new EditorDataContext(editor), false);
-            }
+        commandState.startMappingTimer(actionEvent -> application.invokeLater(() -> {
+          mappingKeys.clear();
+          if (editor.isDisposed()) {
+            return;
           }
-        });
+          for (KeyStroke keyStroke : fromKeys) {
+            handleKey(editor, keyStroke, new EditorDataContext(editor), false);
+          }
+        }, ModalityState.stateForComponent(editor.getComponent())));
       }
       return true;
     }
@@ -295,12 +294,11 @@ public class KeyHandler {
             }
           }
           else if (extensionHandler != null) {
-            RunnableHelper.runWriteCommand(editor.getProject(), new Runnable() {
-              @Override
-              public void run() {
-                extensionHandler.execute(editor, context);
-              }
-            }, "Vim " + extensionHandler.getClass().getSimpleName(), null);
+            final CommandProcessor processor = CommandProcessor.getInstance();
+            processor.executeCommand(editor.getProject(),
+                                     () -> extensionHandler.execute(editor, context),
+                                     "Vim " + extensionHandler.getClass().getSimpleName(),
+                                     null);
           }
           if (prevMappingInfo != null) {
             handleKey(editor, key, currentContext);
@@ -465,25 +463,27 @@ public class KeyHandler {
     // Save off the command we are about to execute
     editorState.setCommand(cmd);
 
-    lastWasBS = ((cmd.getFlags() & Command.FLAG_IS_BACKSPACE) != 0);
+    lastWasBS = cmd.getFlags().contains(CommandFlags.FLAG_IS_BACKSPACE);
 
     Project project = editor.getProject();
-    if (cmd.getType().isRead() || project == null || EditorHelper.canEdit(project, editor)) {
-      if (ApplicationManager.getApplication().isDispatchThread()) {
-        Runnable action = new ActionRunner(editor, context, cmd, key);
-        String name = cmd.getAction().getTemplatePresentation().getText();
-        name = name != null ? "Vim " + name : "";
-        if (cmd.getType().isWrite()) {
-          RunnableHelper.runWriteCommand(project, action, name, action);
-        }
-        else {
-          RunnableHelper.runReadCommand(project, action, name, action);
-        }
-      }
-    }
-    else {
+    final Command.Type type = cmd.getType();
+    if (type.isWrite() && !editor.getDocument().isWritable()) {
       VimPlugin.indicateError();
       reset(editor);
+    }
+    if (ApplicationManager.getApplication().isDispatchThread()) {
+      Runnable action = new ActionRunner(editor, context, cmd, key);
+      String name = cmd.getAction().getTemplatePresentation().getText();
+      name = name != null ? "Vim " + name : "";
+      if (type.isWrite()) {
+        RunnableHelper.runWriteCommand(project, action, name, action);
+      }
+      else if (type.isRead()) {
+        RunnableHelper.runReadCommand(project, action, name, action);
+      }
+      else {
+        CommandProcessor.getInstance().executeCommand(project, action, name, action);
+      }
     }
   }
 
@@ -505,7 +505,7 @@ public class KeyHandler {
         currentArg = node.getArgType();
         // Is the current command an operator? If so set the state to only accept "operator pending"
         // commands
-        if ((node.getFlags() & Command.FLAG_OP_PEND) != 0) {
+        if (node.getFlags().contains(CommandFlags.FLAG_OP_PEND)) {
           editorState.pushState(editorState.getMode(), editorState.getSubMode(), MappingMode.OP_PENDING);
         }
         break;
@@ -550,7 +550,7 @@ public class KeyHandler {
         state = State.BAD_COMMAND;
       }
     }
-    else if (currentArg == Argument.Type.EX_STRING && (node.getFlags() & Command.FLAG_COMPLETE_EX) != 0) {
+    else if (currentArg == Argument.Type.EX_STRING && node.getFlags().contains(CommandFlags.FLAG_COMPLETE_EX)) {
       String text = VimPlugin.getProcess().endSearchCommand(editor, context);
       Argument arg = new Argument(text);
       Command cmd = currentCmd.peek();
@@ -575,7 +575,7 @@ public class KeyHandler {
   private void handleBranchNode(@NotNull Editor editor, @NotNull DataContext context, @NotNull CommandState editorState,
                                 char key, @NotNull BranchNode node) {
     // Flag that we aren't allowing any more count digits (unless it's OK)
-    if ((node.getFlags() & Command.FLAG_ALLOW_MID_COUNT) == 0) {
+    if (!node.getFlags().contains(CommandFlags.FLAG_ALLOW_MID_COUNT)) {
       state = State.COMMAND;
     }
     editorState.setCurrentNode(node);
@@ -587,7 +587,7 @@ public class KeyHandler {
         state = State.BAD_COMMAND;
         return;
       }
-      if (editorState.isRecording() && (arg.getFlags() & Command.FLAG_NO_ARG_RECORDING) != 0) {
+      if (editorState.isRecording() && arg.getFlags().contains(CommandFlags.FLAG_NO_ARG_RECORDING)) {
         handleKey(editor, KeyStroke.getKeyStroke(' '), context);
       }
 
@@ -710,7 +710,7 @@ public class KeyHandler {
       // mode commands. An exception is if this command should leave us in the temporary mode such as
       // "select register"
       if (editorState.getSubMode() == CommandState.SubMode.SINGLE_COMMAND &&
-          (cmd.getFlags() & Command.FLAG_EXPECT_MORE) == 0) {
+          (!cmd.getFlags().contains(CommandFlags.FLAG_EXPECT_MORE))) {
         editorState.popState();
       }
 
@@ -738,7 +738,7 @@ public class KeyHandler {
   private int count;
   private List<KeyStroke> keys;
   private State state;
-  @NotNull private final Stack<Command> currentCmd = new Stack<Command>();
+  @NotNull private final Stack<Command> currentCmd = new Stack<>();
   @NotNull private Argument.Type currentArg;
   private TypedActionHandler origHandler;
   @Nullable private DigraphSequence digraph = null;

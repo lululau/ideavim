@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -173,11 +173,9 @@ public class EditorGroup {
     if (settings.isLineNumbersShown() ^ showEditorLineNumbers) {
       // Update line numbers later since it may be called from a caret listener
       // on the caret move and it may move the caret internally
-      ApplicationManager.getApplication().invokeLater(new Runnable() {
-        @Override
-        public void run() {
-          settings.setLineNumbersShown(showEditorLineNumbers);
-        }
+      ApplicationManager.getApplication().invokeLater(() -> {
+        if (editor.isDisposed()) return;
+        settings.setLineNumbersShown(showEditorLineNumbers);
       });
     }
 

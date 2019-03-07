@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,8 @@ public class ChangeLastGlobalSearchReplaceAction extends EditorAction {
 
   private static class Handler extends ChangeEditorActionHandler {
     public boolean execute(@NotNull Editor editor, @NotNull DataContext context, int count, int rawCount, @Nullable Argument argument) {
-      LineRange range = new LineRange(0, EditorHelper.getLineCount(editor) - 1);
-      return VimPlugin.getSearch().searchAndReplace(editor, range, "s", "//~/&");
+      final LineRange range = new LineRange(0, EditorHelper.getLineCount(editor) - 1);
+      return VimPlugin.getSearch().searchAndReplace(editor, editor.getCaretModel().getPrimaryCaret(), range, "s", "//~/&");
     }
   }
 }

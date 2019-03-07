@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package com.maddyhome.idea.vim.ex.range;
 
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
 import com.maddyhome.idea.vim.VimPlugin;
 import com.maddyhome.idea.vim.common.Mark;
@@ -58,6 +59,12 @@ public class MarkRange extends AbstractRange {
     else {
       return -1;
     }
+  }
+
+  @Override
+  protected int getRangeLine(@NotNull Editor editor, @NotNull Caret caret, @NotNull DataContext context,
+                             boolean lastZero) {
+    return getRangeLine(editor, context, lastZero);
   }
 
   @NotNull

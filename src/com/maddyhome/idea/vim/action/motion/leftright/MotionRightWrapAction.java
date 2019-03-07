@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,14 @@
 package com.maddyhome.idea.vim.action.motion.leftright;
 
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
 import com.maddyhome.idea.vim.VimPlugin;
 import com.maddyhome.idea.vim.action.motion.MotionEditorAction;
 import com.maddyhome.idea.vim.command.Argument;
 import com.maddyhome.idea.vim.handler.MotionEditorActionHandler;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  */
@@ -34,8 +36,14 @@ public class MotionRightWrapAction extends MotionEditorAction {
   }
 
   private static class Handler extends MotionEditorActionHandler {
-    public int getOffset(@NotNull Editor editor, DataContext context, int count, int rawCount, Argument argument) {
-      return VimPlugin.getMotion().moveCaretHorizontalWrap(editor, count);
+    public Handler() {
+      super(true);
+    }
+
+    @Override
+    public int getOffset(@NotNull Editor editor, @NotNull Caret caret, @NotNull DataContext context, int count,
+                         int rawCount, @Nullable Argument argument) {
+      return VimPlugin.getMotion().moveCaretHorizontalWrap(editor, caret, count);
     }
   }
 }

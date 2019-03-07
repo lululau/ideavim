@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,12 +31,15 @@ import org.jetbrains.annotations.Nullable;
  */
 public class PutTextAfterCursorNoIndentAction extends EditorAction {
   public PutTextAfterCursorNoIndentAction() {
-    super(new Handler());
-  }
-
-  private static class Handler extends ChangeEditorActionHandler {
-    public boolean execute(@NotNull Editor editor, @NotNull DataContext context, int count, int rawCount, @Nullable Argument argument) {
-      return VimPlugin.getCopy().putTextAfterCursor(editor, context, count, false, false);
-    }
+    super(new ChangeEditorActionHandler() {
+      @Override
+      public boolean execute(@NotNull Editor editor,
+                             @NotNull DataContext context,
+                             int count,
+                             int rawCount,
+                             @Nullable Argument argument) {
+        return VimPlugin.getCopy().putText(editor, context, count, false, false, false);
+      }
+    });
   }
 }

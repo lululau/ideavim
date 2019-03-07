@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ package com.maddyhome.idea.vim.extension.surround;
 
 import com.google.common.collect.ImmutableMap;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.Pair;
 import com.maddyhome.idea.vim.VimPlugin;
@@ -41,6 +43,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.*;
 
 import static com.maddyhome.idea.vim.extension.VimExtensionFacade.*;
 import static com.maddyhome.idea.vim.helper.StringHelper.parseKeys;
@@ -56,6 +59,7 @@ import static com.maddyhome.idea.vim.helper.StringHelper.parseKeys;
 public class VimSurroundExtension extends VimNonDisposableExtension {
 
   private static final char REGISTER = '"';
+  private final static Pattern tagNameAndAttributesCapturePattern = Pattern.compile("(\\w+)([^>]*)>");
 
   private static final Map<Character, Pair<String, String>> SURROUND_PAIRS = ImmutableMap.<Character, Pair<String, String>>builder()
     .put('b', Pair.create("(", ")"))
@@ -107,9 +111,12 @@ public class VimSurroundExtension extends VimNonDisposableExtension {
   @Nullable
   private static Pair<String, String> inputTagPair(@NotNull Editor editor) {
     final String tagInput = inputString(editor, "<");
-    if (tagInput.endsWith(">")) {
-      final String tagName = tagInput.substring(0, tagInput.length() - 1);
-      return Pair.create("<" + tagName + ">", "</" + tagName + ">");
+    final Matcher matcher = tagNameAndAttributesCapturePattern.matcher(tagInput);
+
+    if (matcher.find()) {
+      final String tagName = matcher.group(1);
+      final String tagAttributes = matcher.group(2);
+      return Pair.create("<" + tagName + tagAttributes + ">", "</" + tagName + ">");
     }
     else {
       return null;
@@ -151,10 +158,11 @@ public class VimSurroundExtension extends VimNonDisposableExtension {
         return;
       }
 
-      // Leave visual mode
-      executeNormal(parseKeys("<Esc>"), editor);
-
-      editor.getCaretModel().moveToOffset(visualRange.getStartOffset());
+      WriteAction.run(() -> {
+        // Leave visual mode
+        executeNormal(parseKeys("<Esc>"), editor);
+        editor.getCaretModel().moveToOffset(visualRange.getStartOffset());
+      });
     }
 
   }
@@ -177,7 +185,7 @@ public class VimSurroundExtension extends VimNonDisposableExtension {
         return;
       }
 
-      change(editor, charFrom, newSurround);
+      WriteAction.run(() -> change(editor, charFrom, newSurround));
     }
 
     static void change(@NotNull Editor editor, char charFrom, @Nullable Pair<String, String> newSurround) {
@@ -188,7 +196,7 @@ public class VimSurroundExtension extends VimNonDisposableExtension {
       perform("di" + pick(charFrom), editor);
       List<KeyStroke> innerValue = getRegister(REGISTER);
       if (innerValue == null) {
-        innerValue = new ArrayList<KeyStroke>();
+        innerValue = new ArrayList<>();
       }
 
       // Delete the surrounding
@@ -252,7 +260,7 @@ public class VimSurroundExtension extends VimNonDisposableExtension {
       if (charFrom == 0) {
         return;
       }
-      CSurroundHandler.change(editor, charFrom, null);
+      WriteAction.run(() -> CSurroundHandler.change(editor, charFrom, null));
     }
   }
 
@@ -272,13 +280,18 @@ public class VimSurroundExtension extends VimNonDisposableExtension {
       if (range == null) {
         return false;
       }
-      final ChangeGroup change = VimPlugin.getChange();
-      final String leftSurround = pair.getFirst();
-      change.insertText(editor, range.getStartOffset(), leftSurround);
-      change.insertText(editor, range.getEndOffset() + leftSurround.length(), pair.getSecond());
+      WriteAction.run(() -> {
+        final ChangeGroup change = VimPlugin.getChange();
+        final String leftSurround = pair.getFirst();
+        final Caret primaryCaret = editor.getCaretModel().getPrimaryCaret();
+        primaryCaret.moveToOffset(range.getStartOffset());
+        change.insertText(editor, primaryCaret, leftSurround);
+        primaryCaret.moveToOffset(range.getEndOffset() + leftSurround.length());
+        change.insertText(editor, primaryCaret, pair.getSecond());
 
-      // Jump back to start
-      executeNormal(parseKeys("`["), editor);
+        // Jump back to start
+        executeNormal(parseKeys("`["), editor);
+      });
       return true;
     }
 

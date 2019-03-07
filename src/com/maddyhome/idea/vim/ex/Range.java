@@ -1,6 +1,6 @@
 /*
  * IdeaVim - Vim emulator for IDEs based on the IntelliJ platform
- * Copyright (C) 2003-2016 The IdeaVim authors
+ * Copyright (C) 2003-2019 The IdeaVim authors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
 package com.maddyhome.idea.vim.ex;
 
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents an Ex command range
@@ -34,6 +36,8 @@ public interface Range {
    * @return The zero based logical line in the editor that the range represents
    */
   int getLine(Editor editor, DataContext context, boolean lastZero);
+
+  int getLine(@NotNull Editor editor, @NotNull Caret caret, @NotNull DataContext context, boolean lastZero);
 
   /**
    * Should the cursor be moved to this range's line?
